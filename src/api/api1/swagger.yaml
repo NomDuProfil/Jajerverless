@@ -1,0 +1,125 @@
+openapi: 3.0.0
+
+info:
+  version: '1.0'
+  title: "Jajerverless API"
+  description: "API pour le site public"
+servers:
+  - url: 'https://api.jaj.fr'
+components:
+  securitySchemes:
+    ApiKeyAuth:
+      type: apiKey
+      in: header
+      name: x-api-key
+x-amazon-apigateway-request-validators:
+  all:
+    validateRequestBody: true
+    validateRequestParameters: true
+x-amazon-apigateway-request-validator: all
+paths:
+  "/user/creation":
+    options:
+        summary: CORS support
+        description: |
+            Enable CORS by returning correct headers
+        tags: ["User"]
+        responses:
+            200:
+              description: Default response for CORS method
+              headers:
+                  Access-Control-Allow-Origin:
+                    schema:
+                        type: string
+                  Access-Control-Allow-Methods:
+                    schema:
+                        type: string
+                  Access-Control-Allow-Headers:
+                    schema:
+                        type: string
+              content: {}
+        x-amazon-apigateway-integration:
+            type: mock
+            requestTemplates:
+            application/json: |
+                {
+                "statusCode" : 200
+                }
+            responses:
+            default:
+                statusCode: "200"
+                responseParameters:
+                method.response.header.Access-Control-Allow-Headers: '''Content-Type,X-Amz-Date,Authorization,X-Api-Key'''
+                method.response.header.Access-Control-Allow-Methods: '''*'''
+                method.response.header.Access-Control-Allow-Origin: '''*'''
+                responseTemplates:
+                application/json: |
+                    {}
+    post:
+        tags: ["User"]
+        description: "Create user."
+        requestBody:
+            required: true
+            content:
+              application/json:
+                  schema:
+                    type: object
+                    properties:
+                        username:
+                            type: string
+                            example: Jaj User
+                        password:
+                            type: string
+                            example: jajpassword!
+                    required:
+                        - username
+                        - password
+                    additionalProperties: false 
+        responses:
+            '200':
+                description: "Réponse par défaut."
+                content:
+                    application/json:
+                      schema:
+                          type: object
+                          properties:
+                            error:
+                                type: string
+                                example: Réponse par défaut.
+            '201':
+                description: "Enregistrement réussi."
+                content:
+                    application/json:
+                      schema:
+                          type: object
+                          properties:
+                            error:
+                                type: string
+                                example: Enregistrement réussi.
+            '400':
+                description: "Mauvais paramètres"
+                content:
+                    application/json:
+                      schema:
+                        type: object
+                        properties:
+                          error:
+                              type: string
+                              example: Mauvais paramètres.
+            '403':
+                description: "Problème de droit."
+                content:
+                    application/json:
+                      schema:
+                          type: object
+                          properties:
+                            error:
+                                type: string
+                                example: Problème de droit.
+        x-amazon-apigateway-integration:
+            uri: "${uri_start}functionLambda1${uri_end}"
+            httpMethod: "POST"
+            type: "aws_proxy"
+        x-amazon-apigateway-api-key-source: HEADER
+        security:
+            - ApiKeyAuth: []
